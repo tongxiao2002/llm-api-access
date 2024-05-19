@@ -1,0 +1,21 @@
+﻿######### llm_args #########
+llm: gpt-3.5-turbo-instruct
+temperature: 0.0
+top_p: 0.7
+n: 1
+max_tokens: 1024
+
+######### data_args #########
+dataset_name: svamp
+prompt_name: ps+
+# prompt_template: "{query}"
+use_core_instruction: false
+
+dataset_filepath: data/svamp_jsonl.json
+output_filepath: runs/${dataset_name}/${llm}/${prompt_name}/results.jsonl
+number_extraction_output_filepath: runs/${dataset_name}/${llm}/${prompt_name}/numerical_results.jsonl
+
+######### running_args #########
+num_threads: 16
+generate_log_file: true
+is_number_extraction: false
