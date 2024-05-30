@@ -1,6 +1,5 @@
 import os
 import sys
-import logging
 from gpt_runner import Model
 from prompt_generator import PromptGenerator
 from utils import (
@@ -16,9 +15,7 @@ from runner_processor import (
     consumer_number_extraction_postprocess,
 )
 from data_processor import (
-    load_gpt4_dataset,
-    load_asdiv_dataset,
-    load_svamp_dataset,
+    load_dataset,
     load_results_for_number_extraction,
     empty_data_postprocess_func,
     number_extraction_data_postprocess,
@@ -54,7 +51,7 @@ def main():
         producer_process_func = producer_gpt_solve_process
         consumer_postprocess_func = consumer_gpt_solve_postprocess
 
-        data_load_and_preprocess_func = load_svamp_dataset
+        data_load_and_preprocess_func = load_dataset
         data_postprocess_func = empty_data_postprocess_func
         output_filepath = arguments.output_filepath
 
