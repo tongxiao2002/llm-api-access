@@ -10,9 +10,6 @@ class LLMArguments:
     temperature: float = field(
         default=1.0, metadata={"help": "The temperature of LLM."}
     )
-    top_k: int = field(
-        default=10, metadata={"help": "The top_k of LLM."}
-    )
     top_p: float = field(
         default=0.7, metadata={"help": "The top_p of LLM."}
     )
