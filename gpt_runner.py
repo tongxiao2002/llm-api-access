@@ -28,6 +28,8 @@ class Model(object):
         producer_process_func: Callable,
         consumer_postprocess_func: Callable,
         logger: logging.Logger = None,
+        endpoint_name: str = None,
+        endpoint_url: str = None,
         gen_kwargs: dict = None,
         *args,
         **kwargs,
@@ -43,7 +45,12 @@ class Model(object):
         self.producer_process_func = producer_process_func
         self.consumer_postprocess_func = consumer_postprocess_func
 
-        self.api_adaptor = APIAdaptor(model=llm, logger=self.logger)
+        self.api_adaptor = APIAdaptor(
+            model=llm,
+            logger=self.logger,
+            endpoint_name=endpoint_name,
+            endpoint_url=endpoint_url,
+        )
 
         self.gen_kwargs = gen_kwargs if gen_kwargs else {}
 
@@ -74,8 +81,8 @@ class Model(object):
 
         for idx, item in enumerate(data_items):
             try:
-                prompt, response = self.producer_process_func(item, self.prompt_template, chat_one_turn_func)
-                assert response is not None, "response is None"
+                prompt, response, err_msg = self.producer_process_func(item, self.prompt_template, chat_one_turn_func)
+                assert err_msg is None or len(err_msg) == 0, err_msg
 
                 queue.put([item, prompt, response])
             except Exception as e:

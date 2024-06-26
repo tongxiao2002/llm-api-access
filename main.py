@@ -16,6 +16,7 @@ from runner_processor import (
 )
 from data_processor import (
     load_dataset,
+    load_direct_input_output_jsonl_dataset,
     load_results_for_number_extraction,
     empty_data_postprocess_func,
     number_extraction_data_postprocess,
@@ -48,8 +49,8 @@ def main():
         output_filepath = arguments.number_extraction_output_filepath
         arguments.llm = "gpt-3.5-turbo-0125"
     else:
-        producer_process_func = producer_gpt_solve_process
-        consumer_postprocess_func = consumer_gpt_solve_postprocess
+        producer_process_func = producer_direct_input_process
+        consumer_postprocess_func = consumer_direct_input_postprocess
 
         data_load_and_preprocess_func = load_dataset
         data_postprocess_func = empty_data_postprocess_func
@@ -57,19 +58,21 @@ def main():
 
     if arguments.generate_log_file:
         logger = get_logger(output_dir=os.path.dirname(output_filepath))
+        printer = logger.info
     else:
         logger = None
+        printer = print
 
     data_args = DataArguments.from_dict(arguments)
     running_args = RunningArguments.from_dict(arguments)
     dataset = data_load_and_preprocess_func(data_args)
 
     if len(dataset) == 0:
-        logger.debug("There is no data need to be run. Experiment finished.")
+        printer("There is no data need to be run. Experiment finished.")
         data_postprocess_func(data_args, logger=logger)
         return
 
-    logger.info(
+    printer(
         f"Model: {arguments.llm}, # Data Items: {len(dataset)}"
     )
 
@@ -83,6 +86,8 @@ def main():
         prompt_template=prompt_template,
         producer_process_func=producer_process_func,
         consumer_postprocess_func=consumer_postprocess_func,
+        endpoint_name=arguments.endpoint_name,
+        endpoint_url=arguments.endpoint_url,
     )
     model.run(
         data_items=dataset,

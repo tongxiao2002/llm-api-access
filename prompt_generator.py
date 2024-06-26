@@ -25,12 +25,12 @@ instructions = {
         "Given the the 'Quesion' and 'Answer', "
         "your goal is to extract the final numerical result from the 'Answer' part, "
         "and put the numerical result after the 'Result' part. You should give me only the numerical answer."
-    )
+    ),
 }
 
 templates = {
     "number-extraction": "Quesion: {question}\nAnswer: {answer}\nResult: ",
-    "qa": "Q: {question}\nA: "
+    "qa": "Q: {question}\nA: ",
 }
 
 

@@ -6,37 +6,32 @@ from api_keys import api_keys
 class APIAdaptor:
     """Support OhMyGPT & GPTGod
     """
-    def __init__(self, model: str, logger):
+    def __init__(self, model: str, logger, endpoint_name: str = None, endpoint_url: str = None):
         self.model = model
-        self.logger = logger
+        self.printer = logger.info if logger else print
+        self.endpoint_name = endpoint_name
+        self.endpoint_url = endpoint_url
         self.max_retry_counts = 20
-        if self.model.startswith('gpt'):
-            # OhMyGPT
-            self.logger.info("Use OhMyGPT as backend.")
-            if self.model == "gpt-3.5-turbo-instruct":
-                self.url = "https://cn2us02.opapi.win/v1/completions"
-            else:
-                self.url = "https://cn2us02.opapi.win/v1/chat/completions"
+        self.api_key_idx = 0
+
+        if endpoint_name and endpoint_url:
+            self.printer(f"Use {endpoint_name} as backend.")
+            keys = api_keys[endpoint_name]
+            self.url = f"{endpoint_url}/v1/chat/completions"
             self.headers = {
-                "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
-                "Authorization": f"Bearer {api_keys['ohmygpt'][0]}",
-            }
-            self.sleep_time = 0.2
-        else:
-            # GPTGod
-            self.logger.info("Use GPTGod as backend.")
-            self.url = "https://api.gptgod.online/v1/chat/completions"
-            self.headers = {
-                "Authorization": f"Bearer {api_keys['gptgod'][0]}",
+                "Authorization": f"Bearer {keys[0]}",
                 "Content-Type": "application/json",
             }
-            if self.model.startswith("mistral"):
-                self.sleep_time = 60
-            elif self.model.startswith("claude"):
-                self.sleep_time = 3
-            else:
-                # gemini-pro
-                self.sleep_time = 5
+            self.sleep_time = 0.2
+
+    def update_api_key(self):
+        self.api_key_idx += 1
+        if self.api_key_idx >= len(api_keys[self.endpoint_name]):
+            raise RuntimeError("All API_KEY quota exceeded.")
+        self.headers = {
+            "Authorization": f"Bearer {api_keys[self.endpoint_name][self.api_key_idx]}",
+            "Content-Type": "application/json",
+        }
 
     def get_payload(self, prompt, temperature=0.0, max_token=1000, n=1, **kwargs):
         if self.model == "gpt-3.5-turbo-instruct":
@@ -74,20 +69,51 @@ class APIAdaptor:
     def chat_one_turn(
         self, prompt, *args, temperature=0.0, max_token=1000, n=1, num_tries=0, **kwargs
     ):
+        err_msg = ""
         try:
             payload = self.get_payload(
                 prompt=prompt, temperature=temperature, max_token=max_token, n=n, **kwargs,
             )
             response = self.request(method="POST", payload=payload).json()
             # gptgod will return error codes if concurrency is too high
-            assert 'code' not in response
+            assert 'error' not in response, f"Response format error: {response}"
+
+            if self.model != "gpt-3.5-turbo-instruct":
+                result = [
+                    response["choices"][i]["message"]["content"]
+                    for i in range(len(response["choices"]))
+                ]
+                result = "\n\n".join(result)
+            else:
+                result = [
+                    response["choices"][i]["text"] for i in range(len(response["choices"]))
+                ]
+                result = "\n\n".join(result)
+
             time.sleep(self.sleep_time)
         except Exception as e:
             print(f"Encountered Error {e}, trying for the {num_tries} time.")
-            if self.model.startswith("mistral"):
-                time.sleep(self.sleep_time)
-            else:
-                time.sleep(5)
+            # {'error': {'message': 'Your input image may contain content that is not allowed by our safety system.', 'type': 
+            # 'invalid_request_error', 'param': None, 'code': 'content_policy_violation'}}
+            if response['error']['code'] == "content_policy_violation":
+                return None, "content_policy_violation"
+            elif response['error']['code'] == "insufficient_quota":
+                self.printer(f"Updating api_key_idx to {self.api_key_idx}")
+                try:
+                    self.update_api_key()
+                except Exception:
+                    raise
+
+                return self.chat_one_turn(
+                    prompt,
+                    temperature,
+                    max_token,
+                    n,
+                    num_tries=num_tries + 1,
+                    **kwargs,
+                )
+
+            time.sleep(5)
             if num_tries >= self.max_retry_counts:
                 raise ConnectionError(f"Retry counts > {self.max_retry_counts}, Abort.")
             else:
@@ -99,17 +125,5 @@ class APIAdaptor:
                     num_tries=num_tries + 1,
                     **kwargs,
                 )
-        if self.model != "gpt-3.5-turbo-instruct":
-            result = [
-                response["choices"][i]["message"]["content"]
-                for i in range(len(response["choices"]))
-            ]
-            result = "\n\n".join(result)
-            tokens = None
-        else:
-            result = [
-                response["choices"][i]["text"] for i in range(len(response["choices"]))
-            ]
-            result = "\n\n".join(result)
-            tokens = response["usage"]["completion_tokens"]
-        return result, tokens
+
+        return result, err_msg

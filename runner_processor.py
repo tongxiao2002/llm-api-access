@@ -4,8 +4,8 @@ import math
 
 def producer_direct_input_process(inputs: dict, prompt_template: str, chat_one_turn_func):
     prompt = prompt_template.format(query=inputs['query'])
-    result, _ = chat_one_turn_func(prompt)
-    return prompt, result
+    result, err_msg = chat_one_turn_func(prompt)
+    return prompt, result, err_msg
 
 
 def consumer_direct_input_postprocess(inputs: dict, response: str, prompt: str, *args, **kwargs):
@@ -19,8 +19,14 @@ def consumer_direct_input_postprocess(inputs: dict, response: str, prompt: str, 
 
 def producer_gpt_solve_process(inputs: dict, prompt_template: str, chat_one_turn_func):
     prompt = prompt_template.format(question=inputs['question'])
-    result, _ = chat_one_turn_func(prompt)
-    return prompt, result
+    result, err_msg = chat_one_turn_func(prompt)
+    return prompt, result, err_msg
+
+
+def producer_geo_gpt_solve_process(inputs: dict, prompt_template: str, chat_one_turn_func):
+    prompt = prompt_template.format(question=inputs['question'])
+    result, err_msg = chat_one_turn_func(prompt, image_url=inputs['image_url'])
+    return prompt, result, err_msg
 
 
 def consumer_gpt_solve_postprocess(inputs: dict, response: str, prompt: str, *args, **kwargs):
@@ -47,8 +53,8 @@ def producer_number_extraction_process(inputs: dict, prompt_template: str, chat_
         question=inputs['question'],
         answer=inputs['response'],
     )
-    result, _ = chat_one_turn_func(prompt)
-    return prompt, result
+    result, err_msg = chat_one_turn_func(prompt)
+    return prompt, result, err_msg
 
 
 def consumer_number_extraction_postprocess(inputs: dict, response: str, prompt: str, *args, **kwargs):
@@ -57,7 +63,10 @@ def consumer_number_extraction_postprocess(inputs: dict, response: str, prompt: 
     response = response.replace(',', '')
 
     if isinstance(inputs['ground-truth'], str):
-        ground_truth = float(inputs['ground-truth'].replace(',', ''))
+        try:
+            ground_truth = float(inputs['ground-truth'].replace(',', ''))
+        except Exception:
+            ground_truth = -100
     else:
         ground_truth = inputs['ground-truth']
 
