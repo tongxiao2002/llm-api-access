@@ -1,11 +1,10 @@
 #!/bin/bash
-dataset_name="gpt_random"
-dataset_filepath="data/GPT_random.json"
+dataset_name="test"
+dataset_filepath="data/test.jsonl"
 llm=gpt-3.5-turbo-0125
 
 python main.py \
     --llm ${llm} \
-    --prompt_name "direct" \
     --prompt_template "{query}" \
     --dataset_name ${dataset_name} \
     --dataset_filepath ${dataset_filepath} \
@@ -13,12 +12,7 @@ python main.py \
     --n 1 \
     --max_tokens 1024 \
     --num_threads 16 \
-    --endpoint_name "chat-anywhere" \
-    --endpoint_url "https://api.chatanywhere.tech" \
+    --endpoint_name "openai" \
+    --endpoint_url "https://api.openai.com" \
     --output_filepath "runs/${dataset_name}/${dataset_name}_response.jsonl" \
     --generate_log_file
-    # --dataset_name ${dataset_name} \
-
-
-    # --endpoint_name "openai" \
-    # --endpoint_url "https://api.openai-proxy.com" \
