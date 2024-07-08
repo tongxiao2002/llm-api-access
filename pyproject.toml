@@ -1,9 +1,13 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "llm-api-access"
+authors = [
+    {name = "tongxiao2002", email = "tongxiao2002@mail.ustc.edu.cn"}
+]
+description = "A simple and easy-to-use package for accessing LLMs with API."
 version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -12,3 +16,10 @@ dependencies = [
     "requests",
     "omegaconf",
 ]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Repository = "https://github.com/tongxiao2002/llm-api-access"
