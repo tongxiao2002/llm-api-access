@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+from typing import Callable
 from .arguments import DataArguments
 
 
@@ -41,7 +42,7 @@ def readjsonl2list(name):
     return data
 
 
-def omit_existing_data_wrapper(data_processor_func):
+def omit_existing_data_wrapper(data_processor_func: Callable):
     def data_processor(data_args: DataArguments, logger=None):
         dataset = data_processor_func(data_args, logger=None)
 
@@ -57,3 +58,12 @@ def omit_existing_data_wrapper(data_processor_func):
         return dataset
 
     return data_processor
+
+
+def llm_inputs_wrapper(llm_inputs_func: Callable):
+    def llm_inputs_processor(inputs: dict, prompt_template: str, chat_one_turn_func):
+        prompt = llm_inputs_func(inputs, prompt_template)
+        result, err_msg = chat_one_turn_func(prompt)
+        return prompt, result, err_msg
+
+    return llm_inputs_processor

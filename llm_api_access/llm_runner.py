@@ -17,6 +17,7 @@ class LLMRunner(object):
     def __init__(
         self,
         arguments: EntireArguments,
+        prompt_template: str,
         producer_process_func: Callable,
         consumer_postprocess_func: Callable,
         logger: logging.Logger = None,
@@ -26,7 +27,7 @@ class LLMRunner(object):
         self.arguments = arguments
         self.logger = logger
 
-        self.prompt_template = self.arguments.prompt_template
+        self.prompt_template = prompt_template
         self.logger.info(f"Prompt Template: {self.prompt_template}")
 
         self.producer_process_func = producer_process_func

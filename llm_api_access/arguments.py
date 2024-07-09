@@ -5,15 +5,16 @@ import dataclasses
 from copy import copy
 from enum import Enum
 from typing import Any, Union, Literal, Callable, Optional
-from omegaconf import OmegaConf
 
 
 @dataclasses.dataclass
 class BaseArguments:
     @classmethod
     def from_args(cls, arguments):
+        # arguments should be dataclasses
+        args_dict = dataclasses.asdict(arguments)
         return cls(**{
-            k: v for k, v in arguments.items()
+            k: v for k, v in args_dict.items()
             if k in inspect.signature(cls).parameters
         })
 
@@ -52,9 +53,6 @@ class GenerationArguments(BaseArguments):
 
 @dataclasses.dataclass
 class DataArguments(BaseArguments):
-    prompt_template: str = dataclasses.field(
-        default="", metadata={"help": "The prompt template that will be used in query."}
-    )
     dataset_name: str = dataclasses.field(
         default="", metadata={
             "help": "The name of the dataset. Have no effect to the program, but may be useful for naming the output path."
@@ -210,14 +208,27 @@ def _parse_dataclass_field(parser: argparse.ArgumentParser, field: dataclasses.F
         parser.add_argument(f"--no_{field.name}", action="store_false", dest=field.name, **bool_kwargs)
 
 
-def parse_args(cfg_file: str = None):
+def parse_args(cfg_file: str = None) -> EntireArguments:
     if cfg_file is not None:
-        arguments: EntireArguments = OmegaConf.load(cfg_file)
+        if cfg_file.lower().endswith(".yaml") or cfg_file.lower().endswith(".yml"):
+            import yaml
+            arguments = EntireArguments(
+                **yaml.full_load(open(cfg_file, "r", encoding="utf-8"))
+            )
+        elif cfg_file.lower().endswith(".json"):
+            import json
+            arguments = EntireArguments(
+                **json.load(open(cfg_file, "r", encoding="utf-8"))
+            )
+        else:
+            raise ValueError("'cfg_file' should only be YAML file or JSON file.")
         return arguments
     else:
         parser = argparse.ArgumentParser(description="llm-api-access argument parser")
         for field in dataclasses.fields(EntireArguments):
             _parse_dataclass_field(parser=parser, field=field)
         args = parser.parse_args()
-        arguments: EntireArguments = OmegaConf.structured(vars(args))
+        arguments = EntireArguments(
+            **vars(args)
+        )
         return arguments
