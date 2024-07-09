@@ -4,6 +4,14 @@
 # IDE
 .vscode/
 
+# macos
+**/.DS_Store
+
+# build
+**/build/
+**/dist/
+**/*.egg-info
+
 # runs & data
 runs/
 data/
