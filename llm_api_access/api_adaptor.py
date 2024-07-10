@@ -15,7 +15,7 @@ class APIAdaptor:
 
         self.logger.info(f"Use {endpoint_name} as backend.")
         keys = api_keys[endpoint_name]
-        self.url = os.path.join({endpoint_url}, "v1/chat/completions")
+        self.url = os.path.join(endpoint_url, "v1/chat/completions")
         self.headers = {
             "Authorization": f"Bearer {keys[0]}",
             "Content-Type": "application/json",
