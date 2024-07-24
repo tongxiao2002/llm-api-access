@@ -13,8 +13,13 @@ from .llm_runner import LLMRunner
 
 
 class LLMRunnerWrapperBase:
-    def __init__(self, arguments: EntireArguments):
+    def __init__(
+        self,
+        arguments: EntireArguments,
+        prompt_template: str,
+    ):
         self.arguments = arguments
+        self.prompt_template = prompt_template
 
         if self.arguments.generate_log_file:
             self.logger = get_logger(output_dir=os.path.dirname(self.arguments.output_filepath))
@@ -30,11 +35,7 @@ class LLMRunnerWrapperBase:
     def postprocess_llm_outputs(self, inputs: dict, response: str, prompt: str):
         raise NotImplementedError
 
-    def run_llm_api(
-        self,
-        arguments: EntireArguments,
-        prompt_template: str,
-    ):
+    def run_llm_api(self):
         output_filepath = self.arguments.output_filepath
 
         data_args = DataArguments.from_args(self.arguments)
@@ -45,19 +46,19 @@ class LLMRunnerWrapperBase:
             return
 
         self.logger.info(
-            f"Model: {arguments.llm}, # Data Items: {len(dataset)}"
+            f"Model: {self.arguments.llm}, # Data Items: {len(dataset)}"
         )
 
         # load & run llm
         runner = LLMRunner(
-            arguments=arguments,
-            prompt_template=prompt_template,
+            arguments=self.arguments,
+            prompt_template=self.prompt_template,
             producer_process_func=llm_inputs_wrapper(self.prepare_llm_inputs),
             consumer_postprocess_func=self.postprocess_llm_outputs,
             logger=self.logger,
         )
         runner.run(
             data_items=dataset,
-            num_threads=arguments.num_threads,
+            num_threads=self.arguments.num_threads,
             output_filename=output_filepath,
         )
