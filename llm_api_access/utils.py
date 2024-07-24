@@ -43,8 +43,8 @@ def readjsonl2list(name):
 
 
 def omit_existing_data_wrapper(data_processor_func: Callable):
-    def data_processor(data_args: DataArguments, logger=None):
-        dataset = data_processor_func(data_args, logger=None)
+    def data_processor(data_args: DataArguments):
+        dataset = data_processor_func(data_args)
 
         if os.path.isfile(data_args.output_filepath) and not data_args.regenerate:
             exist_data = readjsonl2list(data_args.output_filepath)
