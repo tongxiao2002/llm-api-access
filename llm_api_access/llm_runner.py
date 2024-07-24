@@ -74,7 +74,7 @@ class LLMRunner(object):
 
                 queue.put([item, prompt, response])
             except Exception as e:
-                self.logger.error(f"Producer: Solving failed because: {e}. Data item: {item}")
+                self.logger.error(f"\033[91mProducer: Solving failed because:\n{e}\033[0m\n\nData item: {item}")
                 continue
             progress.update(task_id, advance=1)
         queue.put(signal.SIGTERM)
@@ -184,7 +184,7 @@ class Consumer():
         self.thread_pool.join()
 
     def error_callback(self, exception):
-        self.logger.error(f"Consumer failed because: {exception}")
+        self.logger.error(f"\033[91mConsumer failed because:\n{exception}\033[0m")
 
     def consumer_task(
         self,
@@ -209,7 +209,7 @@ class Consumer():
                     try:
                         result = postprocess_func(inputs, response, *args, **prompt, **kwargs)
                     except Exception as e:
-                        self.logger.error(f"Consumer: postprocessed failed because: {e}. Data item: {inputs}")
+                        self.logger.error(f"\033[91mConsumer: postprocessed failed because:\n{e}\033[0m\n\nData item: {inputs}")
                         continue
                     receive_buffer.append(result)
                     data_received += 1

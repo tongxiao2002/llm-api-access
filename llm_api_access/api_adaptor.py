@@ -80,7 +80,8 @@ class APIAdaptor:
             payload = self.get_payload(
                 prompt=prompt, temperature=temperature, max_tokens=max_tokens, n=n, **kwargs,
             )
-            response = self.request(method="POST", payload=payload).json()
+            response = self.request(method="POST", payload=payload)
+            response = response.json()
             # gptgod will return error codes if concurrency is too high
             assert 'error' not in response, f"Response format error: {response}"
 
@@ -99,6 +100,8 @@ class APIAdaptor:
             time.sleep(self.sleep_time)
         except Exception as e:
             print(f"Encountered Error {e}, trying for the {num_tries} time.")
+            if not isinstance(response, dict):
+                return None, response.text
             if response['error']['code'] == "content_policy_violation":
                 return None, "content_policy_violation"
             elif response['error']['code'] == "insufficient_quota":
