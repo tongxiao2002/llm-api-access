@@ -42,11 +42,19 @@ class APIAdaptor:
                 **kwargs,
             }
         else:
+            if "image_url" not in kwargs:
+                contents = prompt
+            else:
+                # add image
+                contents = [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": kwargs['image_url']},
+                ]
             payload = {
                 "model": self.model,
                 "messages": [
                     {"role": "system", "content": "You are a helpful asistant."},
-                    {"role": "user", "content": prompt},
+                    {"role": "user", "content": contents},
                 ],
                 "temperature": temperature,
                 "max_tokens": max_tokens,
