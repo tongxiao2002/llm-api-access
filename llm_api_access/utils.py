@@ -63,7 +63,9 @@ def omit_existing_data_wrapper(data_processor_func: Callable):
 def llm_inputs_wrapper(llm_inputs_func: Callable):
     def llm_inputs_processor(inputs: dict, prompt_template: str, chat_one_turn_func):
         prompt = llm_inputs_func(inputs, prompt_template)
-        result, err_msg = chat_one_turn_func(prompt)
+        if isinstance(prompt, str):
+            prompt = {"prompt": prompt}
+        result, err_msg = chat_one_turn_func(**prompt)
         return prompt, result, err_msg
 
     return llm_inputs_processor

@@ -32,7 +32,7 @@ class LLMRunnerWrapperBase:
     def prepare_llm_inputs(self, inputs: dict, prompt_template: str):
         raise NotImplementedError
 
-    def postprocess_llm_outputs(self, inputs: dict, response: str, prompt: str):
+    def postprocess_llm_outputs(self, inputs: dict, response: str, prompt: str, *args, **kwargs):
         raise NotImplementedError
 
     def run_llm_api(self):

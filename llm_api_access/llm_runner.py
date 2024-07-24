@@ -207,7 +207,7 @@ class Consumer():
                 else:
                     inputs, prompt, response = dataitem
                     try:
-                        result = postprocess_func(inputs, response, prompt, *args, **kwargs)
+                        result = postprocess_func(inputs, response, *args, **prompt, **kwargs)
                     except Exception as e:
                         self.logger.error(f"Consumer: postprocessed failed because: {e}. Data item: {inputs}")
                         continue
