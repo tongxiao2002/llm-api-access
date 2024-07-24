@@ -6,7 +6,7 @@ from .arguments import (
     DataArguments,
     RunningArguments,
 )
-from .wrapper import LLMRunnerWrapper
+from .base_wrapper import LLMRunnerWrapperBase
 
 __all__ = [
     'parse_args',
@@ -15,5 +15,5 @@ __all__ = [
     'DataArguments',
     'GenerationArguments',
     'RunningArguments',
-    'LLMRunnerWrapper',
+    'LLMRunnerWrapperBase',
 ]

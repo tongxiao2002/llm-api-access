@@ -12,7 +12,7 @@ from .arguments import (
 from .llm_runner import LLMRunner
 
 
-class LLMRunnerWrapper:
+class LLMRunnerWrapperBase:
     def __init__(self, arguments: EntireArguments):
         self.arguments = arguments
 
