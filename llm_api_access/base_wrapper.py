@@ -21,11 +21,9 @@ class LLMRunnerWrapperBase:
         else:
             self.logger = logging.getLogger(__file__)
 
-    @omit_existing_data_wrapper
     def load_data(self, data_args: DataArguments):
         raise NotImplementedError
 
-    @llm_inputs_wrapper
     def prepare_llm_inputs(self, inputs: dict, prompt_template: str):
         raise NotImplementedError
 
@@ -40,7 +38,7 @@ class LLMRunnerWrapperBase:
         output_filepath = self.arguments.output_filepath
 
         data_args = DataArguments.from_args(self.arguments)
-        dataset = self.load_data(data_args)
+        dataset = omit_existing_data_wrapper(self.load_data)(data_args)
 
         if len(dataset) == 0:
             self.logger.info("There is no data need to be run. Experiment finished.")
@@ -54,7 +52,7 @@ class LLMRunnerWrapperBase:
         runner = LLMRunner(
             arguments=arguments,
             prompt_template=prompt_template,
-            producer_process_func=self.prepare_llm_inputs,
+            producer_process_func=llm_inputs_wrapper(self.prepare_llm_inputs),
             consumer_postprocess_func=self.postprocess_llm_outputs,
             logger=self.logger,
         )
