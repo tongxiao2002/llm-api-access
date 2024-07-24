@@ -48,7 +48,13 @@ class APIAdaptor:
                 # add image
                 contents = [
                     {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": kwargs['image_url']},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": kwargs['image_url'],
+                            "detail": "high",
+                        },
+                    }
                 ]
             payload = {
                 "model": self.model,
