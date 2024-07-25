@@ -2,20 +2,26 @@ import os
 import time
 import requests
 from .api_keys import api_keys
+from .arguments import EntireArguments
 
 
 class APIAdaptor:
-    def __init__(self, model: str, logger, endpoint_name: str = None, endpoint_url: str = None):
-        self.model = model
+    def __init__(
+        self,
+        arguments: EntireArguments,
+        logger,
+    ):
+        self.arguments = arguments
+        self.llm = self.arguments.llm
         self.logger = logger
-        self.endpoint_name = endpoint_name
-        self.endpoint_url = endpoint_url
+        self.endpoint_name = self.arguments.endpoint_name
+        self.endpoint_url = self.arguments.endpoint_url
         self.max_retry_counts = 10
         self.api_key_idx = 0
 
-        self.logger.info(f"Use {endpoint_name} as backend.")
-        keys = api_keys[endpoint_name]
-        self.url = os.path.join(endpoint_url, "v1/chat/completions")
+        self.logger.info(f"Use {self.endpoint_name} as backend.")
+        keys = api_keys[self.endpoint_name]
+        self.url = os.path.join(self.endpoint_url, "v1/chat/completions")
         self.headers = {
             "Authorization": f"Bearer {keys[0]}",
             "Content-Type": "application/json",
@@ -32,9 +38,9 @@ class APIAdaptor:
         }
 
     def get_payload(self, prompt, temperature=0.0, max_tokens=1000, n=1, **kwargs):
-        if self.model == "gpt-3.5-turbo-instruct":
+        if self.llm == "gpt-3.5-turbo-instruct":
             payload = {
-                "model": self.model,
+                "model": self.llm,
                 "prompt": prompt,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
@@ -52,12 +58,12 @@ class APIAdaptor:
                         "type": "image_url",
                         "image_url": {
                             "url": kwargs['image_url'],
-                            "detail": "high",
+                            "detail": self.arguments.image_detail,
                         },
                     }
                 ]
             payload = {
-                "model": self.model,
+                "model": self.llm,
                 "messages": [
                     {"role": "system", "content": "You are a helpful asistant."},
                     {"role": "user", "content": contents},

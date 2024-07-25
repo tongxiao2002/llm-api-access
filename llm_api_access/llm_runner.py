@@ -34,10 +34,8 @@ class LLMRunner(object):
         self.consumer_postprocess_func = consumer_postprocess_func
 
         self.api_adaptor = APIAdaptor(
-            model=self.arguments.llm,
+            arguments=self.arguments,
             logger=self.logger,
-            endpoint_name=self.arguments.endpoint_name,
-            endpoint_url=self.arguments.endpoint_url,
         )
 
         self.gen_kwargs = GenerationArguments.from_args(self.arguments).to_dict()

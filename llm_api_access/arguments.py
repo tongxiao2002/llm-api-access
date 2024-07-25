@@ -27,6 +27,15 @@ class LLMArguments(BaseArguments):
     llm: str = dataclasses.field(
         default="gpt-3.5-turbo-0125", metadata={"help": "The Large Language Model to be accessed."}
     )
+    image_detail: str = dataclasses.field(
+        default="auto", metadata={
+            "help": (
+                "The level of the detail of the image. "
+                "Only used for models which support image inputs. "
+                "Can be ['auto', 'low', 'high'], default to 'auto'."
+            )
+        }
+    )
     endpoint_name: str = dataclasses.field(
         default="openai", metadata={"help": "API endpoint name. Defaults to 'openai'."}
     )
