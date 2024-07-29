@@ -97,7 +97,7 @@ class APIAdaptor:
             # gptgod will return error codes if concurrency is too high
             assert 'error' not in response, f"Response format error: {response}"
 
-            if self.model != "gpt-3.5-turbo-instruct":
+            if self.llm != "gpt-3.5-turbo-instruct":
                 result = [
                     response["choices"][i]["message"]["content"]
                     for i in range(len(response["choices"]))
