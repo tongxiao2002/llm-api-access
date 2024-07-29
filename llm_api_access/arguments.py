@@ -85,7 +85,7 @@ class RunningArguments(BaseArguments):
         default=1, metadata={"help": "Number of threads used while querying LLM. Defaults to 1."}
     )
     generate_log_file: bool = dataclasses.field(
-        default=False, metadata={"help": "Determine if generates a log file or not."}
+        default=True, metadata={"help": "Determine if generates a log file or not."}
     )
 
 
