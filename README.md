@@ -80,7 +80,7 @@ api_keys = {
 - `LLMArguments`：大模型选择相关参数。
   - `llm`：需要访问的大模型名称，必须为 OpenAI 支持的 models。
   - `image_detail` (option)：仅用于多模态大模型。用于选择图片的清晰程度，可以从 `["auto", "low", "high"]` 中选择，具体含义请见 OpenAI 官方文档。
-  - `endpoint_name`：API 站点名称。考虑到国内访问 OpenAI 基本上都需要一些中转站，该字段用于写入中转站名称。该字段对于框架运行并没有任何实际作用，用户只需要报称该站点名称在 `llm_api_access.api_keys` 中的 `api_keys` 字段中存在即可。
+  - `endpoint_name`：API 站点名称。考虑到国内访问 OpenAI 基本上都需要一些中转站，该字段用于写入中转站名称。该字段对于框架运行并没有任何实际作用，用户只需要确保该站点名称在 `llm_api_access.api_keys` 中的 `api_keys` 字段中存在即可。
   - `endpoint_url`：与 `endpoint_name` 站点对应的 API 端口 URL。如 `https://api.openai.com`，不需要后缀 `/v1/chat/completions`。
 - `GenerationArguments`：LLM 生成相关参数，与 [OpenAI 官网](https://platform.openai.com/docs/api-reference/chat/create)参数一致。
   - `temperature`
