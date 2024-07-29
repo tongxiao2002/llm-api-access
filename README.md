@@ -1,4 +1,6 @@
 # llm-api-access
+中文 | [English](./README_EN.md)
+
 自用 llm api 访问 codebase。本质上是实现了一个简单的 producer-consumer 框架用于并行访问 llm api，具体在 `llm_api_access/llm_runner.py` 中实现。
 
 ## 安装
