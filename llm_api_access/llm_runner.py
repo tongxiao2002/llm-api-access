@@ -6,7 +6,7 @@ import argparse
 from typing import Callable
 from functools import partial
 from .arguments import EntireArguments, GenerationArguments
-from .api_adaptor import APIAdaptor
+from .llm_requester import LLMRequester
 from rich.progress import Progress, TimeElapsedColumn, MofNCompleteColumn
 from multiprocessing import Queue
 from multiprocessing.pool import ThreadPool
@@ -32,11 +32,6 @@ class LLMRunner(object):
         self.producer_process_func = producer_process_func
         self.consumer_postprocess_func = consumer_postprocess_func
 
-        self.api_adaptor = APIAdaptor(
-            arguments=self.arguments,
-            logger=self.logger,
-        )
-
         self.gen_kwargs = GenerationArguments.from_args(self.arguments).to_dict()
 
         self.args = args
@@ -59,7 +54,11 @@ class LLMRunner(object):
         *args,
         **kwargs
     ):
-        chat_one_turn_func = partial(self.api_adaptor.chat_one_turn, **self.gen_kwargs)
+        llm_requester = LLMRequester(
+            arguments=self.arguments,
+            logger=self.logger,
+        )
+        chat_one_turn_func = partial(llm_requester.chat_one_turn, **self.gen_kwargs)
 
         while not data_queue.empty():
             try:
