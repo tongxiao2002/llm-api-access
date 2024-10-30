@@ -1,5 +1,4 @@
 import json
-import math
 import time
 import signal
 import logging
@@ -55,17 +54,19 @@ class LLMRunner(object):
 
     def predict_batch(
         self,
-        data_items: list,
+        data_queue: Queue,
         queue: Queue,
-        thread_idx: int,
-        progress: Progress,
         *args,
         **kwargs
     ):
-        task_id = progress.add_task(description=f"Thread-{thread_idx}", total=len(data_items))
         chat_one_turn_func = partial(self.api_adaptor.chat_one_turn, **self.gen_kwargs)
 
-        for idx, item in enumerate(data_items):
+        while not data_queue.empty():
+            try:
+                item = data_queue.get(timeout=5)
+            except Exception:
+                break
+
             try:
                 prompt, response, err_msg = self.producer_process_func(item, self.prompt_template, chat_one_turn_func)
                 assert err_msg is None or len(err_msg) == 0, err_msg
@@ -73,8 +74,8 @@ class LLMRunner(object):
                 queue.put([item, prompt, response])
             except Exception as e:
                 self.logger.error(f"\033[91mProducer: Solving failed because:\n{e}\033[0m\n\nData item: {item}")
+                data_queue.put(item)
                 continue
-            progress.update(task_id, advance=1)
         queue.put(signal.SIGTERM)
 
     def run(
@@ -97,6 +98,7 @@ class LLMRunner(object):
         consumer = Consumer(
             queue=queue,
             num_producers=num_threads,
+            num_dataitems=len(data_items),
             output_filename=output_filename,
             logger=self.logger,
             postprocess_func=self.consumer_postprocess_func,
@@ -121,24 +123,21 @@ class Producer():
         self.kwargs = kwargs
         self.thread_pool = ThreadPool(processes=self.num_threads)
 
-        progress_columns = Progress.get_default_columns() + (TimeElapsedColumn(), MofNCompleteColumn())
-        self.progress = Progress(*progress_columns, refresh_per_second=2)
-
     def run(self, data: list):
-        num_dataitem_per_thread = math.ceil(len(data) / self.num_threads)
-        print(f"Number of data item per thread: {num_dataitem_per_thread}")
+        data_queue = Queue()
+        for item in data:
+            try:
+                data_queue.put(item, timeout=1)
+            except Exception:
+                self.logger.error("Putting data items to data_queue failed.")
+                return
 
-        self.progress.start()
         for thread_idx in range(self.num_threads):
-            thread_data = data[thread_idx * num_dataitem_per_thread:(thread_idx + 1) * num_dataitem_per_thread]
-
             self.thread_pool.apply_async(
                 func=self.task,
                 kwds={
-                    "data_items": thread_data,
+                    "data_queue": data_queue,
                     "queue": self.queue,
-                    "thread_idx": thread_idx,
-                    "progress": self.progress,
                     **self.kwargs,
                 },
                 error_callback=self.error_callback,
@@ -147,7 +146,6 @@ class Producer():
 
     def join(self):
         self.thread_pool.join()
-        self.progress.stop()
 
     def error_callback(self, exception):
         self.logger.error(f"Producer failed because: {exception}")
@@ -155,15 +153,28 @@ class Producer():
 
 
 class Consumer():
-    def __init__(self, queue: Queue, num_producers: int, output_filename: str, logger, *args, **kwargs):
+    def __init__(
+        self,
+        queue: Queue,
+        num_producers: int,
+        num_dataitems: int,
+        output_filename: str,
+        logger,
+        *args,
+        **kwargs
+    ):
         self.queue = queue
         self.num_producers = num_producers
+        self.num_dataitems = num_dataitems
         self.output_filename = output_filename
         self.logger = logger
 
         self.args = args
         self.kwargs = kwargs
         self.thread_pool = ThreadPool(processes=1)
+
+        progress_columns = Progress.get_default_columns() + (TimeElapsedColumn(), MofNCompleteColumn())
+        self.progress = Progress(*progress_columns, refresh_per_second=2)
 
     def run(self):
         self.thread_pool.apply_async(
@@ -174,12 +185,13 @@ class Consumer():
                 "output_filename": self.output_filename,
                 **self.kwargs
             },
-            error_callback=self.error_callback
+            error_callback=self.error_callback,
         )
         self.thread_pool.close()
 
     def join(self):
         self.thread_pool.join()
+        self.progress.stop()
 
     def error_callback(self, exception):
         self.logger.error(f"\033[91mConsumer failed because:\n{exception}\033[0m")
@@ -193,6 +205,7 @@ class Consumer():
         *args,
         **kwargs
     ):
+        task_id = self.progress.add_task(description="Number of Accomplished Items", total=self.num_dataitems)
         data_received = 0
         receive_buffer = []
         num_producers_remain = num_producers
@@ -211,6 +224,7 @@ class Consumer():
                         continue
                     receive_buffer.append(result)
                     data_received += 1
+                    self.progress.update(task_id=task_id, advance=1)
             if len(receive_buffer) > 20:
                 with open(output_filename, "a", encoding="utf-8") as fout:
                     for item in receive_buffer:
