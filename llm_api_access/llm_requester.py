@@ -1,7 +1,5 @@
 import os
-import time
 import openai
-import requests
 from .api_keys import api_keys
 from .arguments import EntireArguments
 from openai.types.chat import ChatCompletion
