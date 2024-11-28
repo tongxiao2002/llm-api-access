@@ -13,7 +13,7 @@ authors = [
     {name = "tongxiao2002", email = "tongxiao2002@mail.ustc.edu.cn"}
 ]
 description = "A simple and easy-to-use package for accessing LLMs with API."
-version = "0.4.0rc1"
+version = "0.4.0rc2"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [

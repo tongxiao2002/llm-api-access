@@ -18,7 +18,6 @@ class LLMRequester(object):
         self.logger = logger
         self.endpoint_name = self.arguments.endpoint_name
         self.endpoint_url = self.arguments.endpoint_url
-        self.max_retry_counts = 10
         self.api_key_idx = 0
         self.max_retries = 10 if "max_retries" not in kwargs else kwargs["max_retries"]
 
