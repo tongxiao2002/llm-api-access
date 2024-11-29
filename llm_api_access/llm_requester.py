@@ -1,6 +1,5 @@
 import os
 import openai
-from .api_keys import api_keys
 from .arguments import EntireArguments
 from openai.types.chat import ChatCompletion
 
@@ -16,24 +15,26 @@ class LLMRequester(object):
         self.arguments = arguments
         self.llm = self.arguments.llm
         self.logger = logger
-        self.endpoint_name = self.arguments.endpoint_name
-        self.endpoint_url = self.arguments.endpoint_url
+        self.base_url = self.arguments.base_url
         self.api_key_idx = 0
         self.max_retries = 10 if "max_retries" not in kwargs else kwargs["max_retries"]
 
-        self.logger.info(f"Use {self.endpoint_name} as backend.")
-        keys = api_keys[self.endpoint_name]
+        self.logger.info(f"Use {self.base_url} as backend.")
+        self.api_key = self.arguments.api_key
+        if isinstance(self.api_key, str):
+            self.api_key = [self.api_key]
+
         self.openai_client = openai.OpenAI(
-            api_key=keys[0],
-            base_url=os.path.join(self.endpoint_url, "v1"),
+            api_key=self.api_key[0],
+            base_url=self.base_url,
             max_retries=self.max_retries,
         )
 
     def update_api_key(self):
         self.api_key_idx += 1
-        if self.api_key_idx >= len(api_keys[self.endpoint_name]):
+        if self.api_key_idx >= len(self.api_key):
             raise RuntimeError("All API_KEY quota exceeded.")
-        self.openai_client.api_key = api_keys[self.endpoint_name][self.api_key_idx]
+        self.openai_client.api_key = self.api_key[self.api_key_idx]
 
     def get_payload(self, prompt, temperature=0.0, max_completion_tokens=256, n=1, **kwargs):
         if "image_url" not in kwargs:

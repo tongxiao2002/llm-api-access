@@ -1,7 +1,7 @@
 ﻿######### llm_args #########
 llm: gpt-4o-mini
 endpoint_name: openai
-endpoint_url: https://api.openai.com
+base_url: https://api.openai.com
 
 ######### generation_args #########
 temperature: 0.0

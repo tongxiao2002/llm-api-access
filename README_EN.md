@@ -75,7 +75,7 @@ The command line arguments for this framework match the parameters in `llm_api_a
   - `llm`: The name of the large language model to access, must be a model supported by OpenAI.
   - `image_detail` (optional): Used only for multimodal models. Selects the image quality, can be chosen from `["auto", "low", "high"]`. See OpenAI official documentation for details.
   - `endpoint_name`: API endpoint name. Considering that accessing OpenAI from within China often requires a proxy, this field is used to specify the proxy name. This field does not affect the framework’s operation, users just need to ensure that the endpoint name exists in the `api_keys` field in `llm_api_access.api_keys`.
-  - `endpoint_url`: The URL of the API endpoint corresponding to `endpoint_name`, e.g., `https://api.openai.com`, without the `/v1/chat/completions` suffix.
+  - `base_url`: The URL of the API endpoint corresponding to `endpoint_name`, e.g., `https://api.openai.com`, without the `/v1/chat/completions` suffix.
 - GenerationArguments: Parameters related to LLM generation, consistent with [OpenAI official documentation](https://platform.openai.com/docs/api-reference/chat/create).
   - `temperature`
   - `top_p`

@@ -12,7 +12,7 @@ python main.py \
     --max_completion_tokens 1024 \
     --num_threads 16 \
     --endpoint_name "openai" \
-    --endpoint_url "https://api.openai.com" \
+    --base_url "https://api.openai.com" \
     --output_filepath "runs/${dataset_name}/${dataset_name}_response.jsonl" \
     --generate_log_file \
     --save_as_json
