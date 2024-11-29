@@ -2,6 +2,7 @@ import json
 from llm_api_access import (
     parse_args,
     DataArguments,
+    EntireArguments,
     LLMRunnerWrapperBase
 )
 
@@ -30,8 +31,18 @@ class Runner(LLMRunnerWrapperBase):
 
 if __name__ == "__main__":
     prompt_template = "{query}"
-    # cfg_file = config/config.yaml
+    # arguments can be parsed from cmd
     arguments = parse_args()
+    # or simply hard coded
+    arguments = EntireArguments(
+        llm="gpt-4o-mini",
+        dataset_name="dataset",
+        dataset_filepath="/path/to/dataset",
+        output_filepath="/path/to/output",
+        temperature=0.0,
+        num_threads=1,
+        save_as_json=True,
+    )
     runner = Runner(arguments=arguments, prompt_template=prompt_template)
 
     runner.run_llm_api()

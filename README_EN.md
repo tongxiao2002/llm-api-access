@@ -80,7 +80,7 @@ The command line arguments for this framework match the parameters in `llm_api_a
   - `temperature`
   - `top_p`
   - `n`
-  - `max_tokens`
+  - `max_completion_tokens`
 - RunningArguments: Parameters specific to this run.
   - num_threads: The number of threads to use for parallel access in this run.
   - generate_log_file (optional): Whether to generate a log for this run. Default is `True`, recommended to set to `True`.

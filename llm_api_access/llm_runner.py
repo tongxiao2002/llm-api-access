@@ -101,6 +101,7 @@ class LLMRunner(object):
             output_filename=output_filename,
             logger=self.logger,
             postprocess_func=self.consumer_postprocess_func,
+            save_as_json=self.arguments.save_as_json,
             *args,
             **kwargs,
         )
@@ -158,6 +159,7 @@ class Consumer():
         num_producers: int,
         num_dataitems: int,
         output_filename: str,
+        save_as_json: bool,
         logger,
         *args,
         **kwargs
@@ -166,6 +168,7 @@ class Consumer():
         self.num_producers = num_producers
         self.num_dataitems = num_dataitems
         self.output_filename = output_filename
+        self.save_as_json = save_as_json
         self.logger = logger
 
         self.args = args
@@ -194,6 +197,45 @@ class Consumer():
 
     def error_callback(self, exception):
         self.logger.error(f"\033[91mConsumer failed because:\n{exception}\033[0m")
+
+    def write_results_to_file(self, data: list, output_filename: str, sort_by_id: bool = False):
+        def _sort_by_id(data):
+            try:
+                _ = int(data[0]['id'])
+                is_integer_id = True
+            except Exception:
+                is_integer_id = False
+                pass
+            if is_integer_id:
+                data = sorted(data, key=lambda x: int(x["id"]))
+            else:
+                data = sorted(data, key=lambda x: x["id"])
+            return data
+
+        if self.save_as_json:
+            with open(output_filename, "r", encoding="utf-8") as fin:
+                existing_data = json.load(fin)
+            data = existing_data + data
+            if sort_by_id:
+                data = _sort_by_id(data)
+            with open(output_filename, "w", encoding="utf-8") as fout:
+                json.dump(data, fout, ensure_ascii=False, indent=4)
+        else:
+            if sort_by_id:
+                with open(output_filename, "r", encoding="utf-8") as fin:
+                    existing_data = []
+                    for line in fin:
+                        existing_data.append(json.loads(line.strip()))
+                data = existing_data + data
+                data = _sort_by_id(data)
+                with open(output_filename, "w", encoding="utf-8") as fout:
+                    for item in data:
+                        fout.write(json.dumps(item, ensure_ascii=False) + "\n")
+            else:
+                # save as jsonl, just append
+                with open(output_filename, "a", encoding="utf-8") as fout:
+                    for item in data:
+                        fout.write(json.dumps(item, ensure_ascii=False) + "\n")
 
     def consumer_task(
         self,
@@ -225,12 +267,8 @@ class Consumer():
                     data_received += 1
                     self.progress.update(task_id=task_id, advance=1)
             if len(receive_buffer) > 20:
-                with open(output_filename, "a", encoding="utf-8") as fout:
-                    for item in receive_buffer:
-                        fout.write(json.dumps(item, ensure_ascii=False) + "\n")
+                self.write_results_to_file(data=receive_buffer, output_filename=output_filename)
                 receive_buffer = []
             time.sleep(5)
-        with open(output_filename, "a", encoding="utf-8") as fout:
-            for item in receive_buffer:
-                fout.write(json.dumps(item, ensure_ascii=False) + "\n")
+        self.write_results_to_file(data=receive_buffer, output_filename=output_filename, sort_by_id=True)
         receive_buffer = []

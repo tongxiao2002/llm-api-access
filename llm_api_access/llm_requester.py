@@ -35,7 +35,7 @@ class LLMRequester(object):
             raise RuntimeError("All API_KEY quota exceeded.")
         self.openai_client.api_key = api_keys[self.endpoint_name][self.api_key_idx]
 
-    def get_payload(self, prompt, temperature=0.0, max_tokens=1000, n=1, **kwargs):
+    def get_payload(self, prompt, temperature=0.0, max_completion_tokens=256, n=1, **kwargs):
         if "image_url" not in kwargs:
             contents = prompt
         else:
@@ -57,7 +57,7 @@ class LLMRequester(object):
                 {"role": "user", "content": contents},
             ],
             "temperature": temperature,
-            "max_tokens": max_tokens,
+            "max_completion_tokens": max_completion_tokens,
             "n": n,
             **kwargs,
         }
@@ -68,12 +68,12 @@ class LLMRequester(object):
         return completion
 
     def chat_one_turn(
-        self, prompt, *args, temperature=0.0, max_tokens=1000, n=1, **kwargs
+        self, prompt, *args, temperature=0.0, max_completion_tokens=256, n=1, **kwargs
     ):
         err_msg = ""
         try:
             payload = self.get_payload(
-                prompt=prompt, temperature=temperature, max_tokens=max_tokens, n=n, **kwargs,
+                prompt=prompt, temperature=temperature, max_completion_tokens=max_completion_tokens, n=n, **kwargs,
             )
             completion = self.request(payload=payload)
             # assert 'error' not in response, f"Response format error: {response}"

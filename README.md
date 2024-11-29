@@ -88,7 +88,7 @@ api_keys = {
   - `temperature`
   - `top_p`
   - `n`
-  - `max_tokens`
+  - `max_completion_tokens`
 - `RunningArguments`：本次运行特制的相关参数。
   - `num_threads`：本次运行需要使用多少个线程并行访问。
   - `generate_log_file` (option)：本次运行是否生成 log，默认为 `True`，建议设置为 `True`。

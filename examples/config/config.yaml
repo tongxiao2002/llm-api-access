@@ -1,5 +1,5 @@
 ﻿######### llm_args #########
-llm: gpt-3.5-turbo-0125
+llm: gpt-4o-mini
 endpoint_name: openai
 endpoint_url: https://api.openai.com
 
@@ -7,14 +7,15 @@ endpoint_url: https://api.openai.com
 temperature: 0.0
 top_p: 0.7
 n: 1
-max_tokens: 1024
+max_completion_tokens: 1024
 
 ######### data_args #########
 prompt_template: "{query}"
 dataset_name: dataset
 dataset_filepath: /path/to/dataset
-output_filepath: runs/test/gpt-3.5-turbo-0125/results.jsonl
+output_filepath: runs/test/gpt-4o-mini/results.jsonl
 
 ######### running_args #########
 num_threads: 16
 generate_log_file: true
+save_as_json: true
