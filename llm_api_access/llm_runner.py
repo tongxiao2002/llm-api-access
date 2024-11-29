@@ -1,3 +1,4 @@
+import os
 import json
 import time
 import signal
@@ -28,6 +29,7 @@ class LLMRunner(object):
 
         self.prompt_template = prompt_template
         self.logger.info(f"Prompt Template: {self.prompt_template}")
+        self.logger.info(f"Use '{self.arguments.base_url}' as backend.")
 
         self.producer_process_func = producer_process_func
         self.consumer_postprocess_func = consumer_postprocess_func
@@ -54,10 +56,7 @@ class LLMRunner(object):
         *args,
         **kwargs
     ):
-        llm_requester = LLMRequester(
-            arguments=self.arguments,
-            logger=self.logger,
-        )
+        llm_requester = LLMRequester(arguments=self.arguments)
         chat_one_turn_func = partial(llm_requester.chat_one_turn, **self.gen_kwargs)
 
         while not data_queue.empty():
@@ -74,6 +73,7 @@ class LLMRunner(object):
             except Exception as e:
                 self.logger.error(f"\033[91mProducer: Solving failed because:\n{e}\033[0m\n\nData item: {item}")
                 data_queue.put(item)
+                time.sleep(2.5)
                 continue
         queue.put(signal.SIGTERM)
 
@@ -176,13 +176,16 @@ class Consumer():
         self.thread_pool = ThreadPool(processes=1)
 
         progress_columns = Progress.get_default_columns() + (TimeElapsedColumn(), MofNCompleteColumn())
-        self.progress = Progress(*progress_columns, refresh_per_second=2)
+        self.progress = Progress(*progress_columns, refresh_per_second=1)
 
     def run(self):
+        self.progress.start()
         self.thread_pool.apply_async(
             func=self.consumer_task,
             kwds={
                 "queue": self.queue,
+                "progress": self.progress,
+                "num_dataitems": self.num_dataitems,
                 "num_producers": self.num_producers,
                 "output_filename": self.output_filename,
                 **self.kwargs
@@ -213,8 +216,11 @@ class Consumer():
             return data
 
         if self.save_as_json:
-            with open(output_filename, "r", encoding="utf-8") as fin:
-                existing_data = json.load(fin)
+            if os.path.isfile(output_filename):
+                with open(output_filename, "r", encoding="utf-8") as fin:
+                    existing_data = json.load(fin)
+            else:
+                existing_data = []
             data = existing_data + data
             if sort_by_id:
                 data = _sort_by_id(data)
@@ -222,10 +228,13 @@ class Consumer():
                 json.dump(data, fout, ensure_ascii=False, indent=4)
         else:
             if sort_by_id:
-                with open(output_filename, "r", encoding="utf-8") as fin:
+                if os.path.isfile(output_filename):
+                    with open(output_filename, "r", encoding="utf-8") as fin:
+                        existing_data = []
+                        for line in fin:
+                            existing_data.append(json.loads(line.strip()))
+                else:
                     existing_data = []
-                    for line in fin:
-                        existing_data.append(json.loads(line.strip()))
                 data = existing_data + data
                 data = _sort_by_id(data)
                 with open(output_filename, "w", encoding="utf-8") as fout:
@@ -240,13 +249,15 @@ class Consumer():
     def consumer_task(
         self,
         queue: Queue,
+        progress: Progress,
+        num_dataitems: int,
         num_producers: int,
         output_filename: str,
         postprocess_func,
         *args,
         **kwargs
     ):
-        task_id = self.progress.add_task(description="Number of Accomplished Items", total=self.num_dataitems)
+        task_id = progress.add_task(description="Number of Accomplished Items", total=num_dataitems)
         data_received = 0
         receive_buffer = []
         num_producers_remain = num_producers

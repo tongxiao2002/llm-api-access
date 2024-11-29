@@ -33,12 +33,15 @@ def save2jsonl(name, data):
             file.write(json_str + "\n")
 
 
-def readjsonl2list(name):
+def readjson2list(name):
     data = []
-    with open(name, "r") as file:
-        for line in file:
-            dict_obj = json.loads(line)
-            data.append(dict_obj)
+    with open(name, "r", encoding="utf-8") as file:
+        try:
+            data = json.load(file)
+        except Exception:
+            for line in file:
+                dict_obj = json.loads(line.strip())
+                data.append(dict_obj)
     return data
 
 
@@ -47,14 +50,19 @@ def omit_existing_data_wrapper(data_processor_func: Callable):
         dataset = data_processor_func(data_args)
 
         if os.path.isfile(data_args.output_filepath) and not data_args.regenerate:
-            exist_data = readjsonl2list(data_args.output_filepath)
+            is_empty_file = False
+            with open(data_args.output_filepath) as fin:
+                if len(fin.read().strip()) == 0:
+                    os.remove(data_args.output_filepath)
+                    is_empty_file = True
+
+            exist_data = readjson2list(data_args.output_filepath) if not is_empty_file else []
             exist_data_ids = set([item['id'] for item in exist_data])
             data_remains = [item for item in dataset if item['id'] not in exist_data_ids]
             dataset = data_remains
         else:
-            with open(data_args.output_filepath, "w", encoding="utf-8"):
-                # wipe all existing data
-                pass
+            if os.path.isfile(data_args.output_filepath):
+                os.remove(data_args.output_filepath)
         return dataset
 
     return data_processor

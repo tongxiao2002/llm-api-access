@@ -1,4 +1,3 @@
-import os
 import openai
 from .arguments import EntireArguments
 from openai.types.chat import ChatCompletion
@@ -8,18 +7,15 @@ class LLMRequester(object):
     def __init__(
         self,
         arguments: EntireArguments,
-        logger,
         *args,
         **kwargs,
     ):
         self.arguments = arguments
         self.llm = self.arguments.llm
-        self.logger = logger
         self.base_url = self.arguments.base_url
         self.api_key_idx = 0
-        self.max_retries = 10 if "max_retries" not in kwargs else kwargs["max_retries"]
+        self.max_retries = 5 if "max_retries" not in kwargs else kwargs["max_retries"]
 
-        self.logger.info(f"Use {self.base_url} as backend.")
         self.api_key = self.arguments.api_key
         if isinstance(self.api_key, str):
             self.api_key = [self.api_key]
@@ -94,6 +90,7 @@ class LLMRequester(object):
             #         self.update_api_key()
             #     except Exception:
             #         raise
+            result = None
             err_msg = str(e)
 
         return result, err_msg

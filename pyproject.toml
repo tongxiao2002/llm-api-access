@@ -13,12 +13,13 @@ authors = [
     {name = "tongxiao2002", email = "tongxiao2002@mail.ustc.edu.cn"}
 ]
 description = "A simple and easy-to-use package for accessing LLMs with API."
-version = "0.4.0rc2"
+version = "0.4.0"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
     "rich",
     "requests",
+    "openai>=1.55.3"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
