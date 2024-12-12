@@ -27,8 +27,8 @@ class LLMArguments(BaseArguments):
     llm: str = dataclasses.field(
         default="gpt-4o-mini", metadata={"help": "The Large Language Model to be accessed."}
     )
-    api_key: Union[str, list] = dataclasses.field(
-        default=None, metadata={"help": "The list of API keys"}
+    api_key: str = dataclasses.field(
+        default="sk-xxxxx", metadata={"help": "The OpenAI of API key."}
     )
     image_detail: str = dataclasses.field(
         default="auto", metadata={
